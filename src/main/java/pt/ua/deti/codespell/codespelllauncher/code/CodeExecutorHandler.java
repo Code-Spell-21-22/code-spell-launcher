@@ -1,6 +1,7 @@
 package pt.ua.deti.codespell.codespelllauncher.code;
 
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FileUtils;
 import pt.ua.deti.codespell.codespelllauncher.model.CodeExecutionInstance;
 
@@ -12,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Getter
+@Log4j2
 public class CodeExecutorHandler {
 
     private final CodeExecutionInstance codeExecutionInstance;
@@ -52,8 +54,6 @@ public class CodeExecutorHandler {
 
         File mainClassFile = new File(newDirectory.getAbsolutePath() + "/code-spell-code-executor/src/main/java/pt/ua/deti/codespell/App.java");
 
-        System.out.println(mainClassFile.getAbsolutePath());
-
         if (!mainClassFile.exists() || !mainClassFile.isFile()) return false;
 
         Path path = mainClassFile.toPath();
@@ -64,6 +64,11 @@ public class CodeExecutorHandler {
             content = Files.readString(path, charset);
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
+        }
+
+        if (!content.contains("// INJECT CODE HERE")) {
+            log.warn("Unable to find inject pattern in the target class.");
             return false;
         }
 

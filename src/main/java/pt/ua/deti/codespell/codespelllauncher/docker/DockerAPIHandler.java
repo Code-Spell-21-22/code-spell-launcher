@@ -7,10 +7,8 @@ import com.github.dockerjava.core.DockerClientBuilder;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class DockerAPIHandler {
@@ -29,37 +27,44 @@ public class DockerAPIHandler {
         return dockerClient.listImagesCmd().exec();
     }
 
-    public List<Image> getListOfImagesByName(String imageName) {
-        return dockerClient.listImagesCmd().withImageNameFilter(imageName).exec();
+    public List<Image> getListOfImagesByName(String imageTag) {
+        List<Image> images = dockerClient.listImagesCmd().exec();
+        return images.stream()
+                .filter(image -> Arrays.asList(image.getRepoTags()).contains(imageTag))
+                .collect(Collectors.toList());
     }
 
     public Optional<Image> getImageById(String imageId) {
         return getListOfImages().stream().filter(image -> image.getId().equals(imageId)).findFirst();
     }
 
-    public BuildImageResultCallback buildImage(File imageFile, Set<String> tags, Map<String, String> args)  {
-
-        System.out.println("Building image");
+    public BuildImageResultCallback buildImage(File imageFile, String tag, String argKey, String argValue)  {
 
         try {
             return dockerClient.buildImageCmd()
                     .withDockerfile(imageFile)
-                    .withBuildArg("codeUniqueId", "24b5c104-5530-4125-9b3a-093fd7d88e8d")
-                    .withTags(Set.of("code"))
+                    .withBuildArg(argKey, argValue)
+                    .withTag(tag)
                     .exec(new BuildImageResultCallback())
                     .awaitCompletion();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         return null;
+
     }
 
-    public String createDockerContainer(String containerName, Image image) {
-        return dockerClient.createContainerCmd(image.getId()).withName(containerName).exec().getId();
+    public String createDockerContainer(String containerName, Image image, String... envVars) {
+        return dockerClient.createContainerCmd(image.getId()).withName(containerName).withEnv(envVars).exec().getId();
     }
 
     public void startContainer(String containerId) {
         dockerClient.startContainerCmd(containerId).exec();
+    }
+
+    public void copyToContainer(String containerId, File file) {
+        dockerClient.copyArchiveToContainerCmd(containerId).withHostResource(file.getAbsolutePath()).exec();
     }
 
 }

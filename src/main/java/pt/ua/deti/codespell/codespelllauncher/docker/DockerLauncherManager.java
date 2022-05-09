@@ -2,6 +2,7 @@ package pt.ua.deti.codespell.codespelllauncher.docker;
 
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Component
+@Log4j2
 public class DockerLauncherManager {
 
     private final DockerAPIHandler dockerAPIHandler;
@@ -24,46 +26,30 @@ public class DockerLauncherManager {
 
     public void launchNewProcessor(CodeExecutionInstance codeExecutionInstance) {
 
-        Set<String> tags = Set.of("code_spell_launcher_executor:latest");
-        File processorDockerFile = new File(FileUtils.getUserDirectoryPath() + File.separator + "Code_Spell" + File.separator + "Launcher" + File.separator + "Dockerfile");
+        String tag = "code_spell_code_executor";
         String containerName = String.format("Code_Spell_Executor_%s", codeExecutionInstance.getCodeUniqueId());
+        File codeExecutorDirectory = new File(FileUtils.getUserDirectoryPath() + File.separator + "Code_Spell" + File.separator + "Launcher" + File.separator + "Temp" + File.separator + codeExecutionInstance.getCodeUniqueId().toString() + File.separator + "code-spell-code-executor");
 
-        try {
-            System.out.println(FileUtils.readFileToString(processorDockerFile, StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            e.printStackTrace();
+        List<Image> images = dockerAPIHandler.getListOfImagesByName(tag);
+        List<Container> containerList = dockerAPIHandler.getListOfContainersByName(List.of(containerName));
+
+        if (images.isEmpty()) {
+           log.warn(String.format("Unable to find %s image. The container could not be launched...", tag));
+            return;
         }
 
-        List<Container> containerList = dockerAPIHandler.getListOfContainersByName(List.of(containerName));
-        String containerId = null;
+        Image processorImage = images.stream().findFirst().get();
+        String containerId;
 
-        if (containerList.size() == 0) {
-
-            Optional<Image> processorImage;
-
-            System.out.println("Images list by name: " + dockerAPIHandler.getListOfImagesByName("code"));
-
-            if (dockerAPIHandler.getListOfImagesByName("code").size() == 0) {
-                System.out.println("Start build...");
-                String imageId = dockerAPIHandler.buildImage(processorDockerFile, tags, new HashMap<>()).awaitImageId();
-                System.out.println("Finished build...");
-                processorImage = dockerAPIHandler.getImageById(imageId);
-            } else {
-                processorImage = dockerAPIHandler.getListOfImagesByName("code").stream().findFirst();
-            }
-
-            if (processorImage.isPresent())
-                containerId = dockerAPIHandler.createDockerContainer(containerName, processorImage.get());
-
+        if (containerList.isEmpty()) {
+            containerId = dockerAPIHandler.createDockerContainer(containerName, processorImage, "CODE_ID=" + codeExecutionInstance.getCodeUniqueId().toString());
         } else {
             containerId = containerList.get(0).getId();
         }
 
-        System.out.println("COntainer ID: " + containerId);
-
+        dockerAPIHandler.copyToContainer(containerId, codeExecutorDirectory);
         dockerAPIHandler.startContainer(containerId);
 
     }
-
 
 }

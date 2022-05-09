@@ -2,6 +2,7 @@ package pt.ua.deti.codespell.codespelllauncher.rabbitmq;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import pt.ua.deti.codespell.codespelllauncher.code.CodeExecutorHandler;
@@ -11,6 +12,7 @@ import pt.ua.deti.codespell.codespelllauncher.model.CodeExecutionInstance;
 import java.nio.charset.StandardCharsets;
 
 @Component
+@Log4j2
 public class RabbitMQReceiver {
 
     private final DockerLauncherManager dockerLauncherManager;
@@ -21,17 +23,14 @@ public class RabbitMQReceiver {
     }
 
     public void receiveMessage(byte[] messageBytes) {
-
         String message = new String(messageBytes, StandardCharsets.UTF_8);
-
         processMessage(message);
-        System.out.println("Received < " + message);
-
+        log.info("Received message: " + message);
     }
 
     public void receiveMessage(String message) {
         processMessage(message);
-        System.out.println("Received < " + message);
+        log.info("Received message: " + message);
     }
 
     private void processMessage(String message) {
@@ -49,8 +48,12 @@ public class RabbitMQReceiver {
 
         codeExecutorHandler.initDirectory();
 
-        System.out.println("Code Injection Result: " + codeExecutorHandler.injectCode());
-        System.out.println(codeExecutionInstance.getCodeUniqueId());
+        if (codeExecutorHandler.injectCode()) {
+            log.info(String.format("Code successfully injected for code execution request (%s).", codeExecutionInstance.getCodeUniqueId()));
+        } else {
+            log.warn(String.format("Error occurred while injecting code for code execution request (%s).", codeExecutionInstance.getCodeUniqueId()));
+            return;
+        }
 
         dockerLauncherManager.launchNewProcessor(codeExecutionInstance);
 
