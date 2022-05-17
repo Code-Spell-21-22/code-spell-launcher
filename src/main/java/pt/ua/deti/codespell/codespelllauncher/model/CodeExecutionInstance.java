@@ -10,6 +10,8 @@ import java.util.UUID;
 public class CodeExecutionInstance {
 
     private UUID codeUniqueId;
+    private int chapter;
+    private int level;
     private String code;
 
 }

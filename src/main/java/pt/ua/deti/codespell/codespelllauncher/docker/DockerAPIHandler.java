@@ -4,16 +4,19 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.BuildImageResultCallback;
 import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DockerClientBuilder;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
 public class DockerAPIHandler {
 
-    DockerClient dockerClient = DockerClientBuilder.getInstance().build();
+    private final DockerClient dockerClient = DockerClientBuilder.getInstance().build();
 
     public List<Container> getListOfContainers() {
         return dockerClient.listContainersCmd().withShowAll(true).exec();
@@ -65,6 +68,48 @@ public class DockerAPIHandler {
 
     public void copyToContainer(String containerId, File file) {
         dockerClient.copyArchiveToContainerCmd(containerId).withHostResource(file.getAbsolutePath()).exec();
+    }
+
+    public Boolean isContainerRunning(String containerId) {
+        return dockerClient.inspectContainerCmd(containerId).exec().getState().getRunning();
+    }
+
+    public Boolean pullFromContainer(String containerId, String sourceFilePath, String destinationFilePath) {
+
+        TarArchiveInputStream archiveInputStream = new TarArchiveInputStream(dockerClient.copyArchiveFromContainerCmd(containerId, sourceFilePath).exec());
+
+        try {
+
+            TarArchiveEntry entry;
+            int bufferSize = 8192;
+
+            while ((entry = (TarArchiveEntry) archiveInputStream.getNextEntry()) != null) {
+
+                if (entry.isDirectory()) {
+                    new File(destinationFilePath).mkdirs();
+                } else {
+
+                    int count;
+                    byte[] data = new byte[bufferSize];
+                    FileOutputStream fos = new FileOutputStream(destinationFilePath);
+                    BufferedOutputStream dest = new BufferedOutputStream(fos,bufferSize);
+                    while ((count = archiveInputStream.read(data, 0, bufferSize)) != -1) {
+                        dest.write(data, 0, count);
+                    }
+
+                    dest.close();
+
+                }
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+
     }
 
 }

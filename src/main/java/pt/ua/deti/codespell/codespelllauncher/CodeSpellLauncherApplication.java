@@ -1,21 +1,15 @@
 package pt.ua.deti.codespell.codespelllauncher;
 
-import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.model.Container;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import pt.ua.deti.codespell.codespelllauncher.code.CodeExecutorHandler;
-import pt.ua.deti.codespell.codespelllauncher.docker.DockerAPIHandler;
-import pt.ua.deti.codespell.codespelllauncher.rabbitmq.RabbitMQHandler;
 import pt.ua.deti.codespell.codespelllauncher.rabbitmq.RabbitMQReceiver;
 import pt.ua.deti.codespell.codespelllauncher.rabbitmq.RabbitMQSender;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 @SpringBootApplication
+@Log4j2
 public class CodeSpellLauncherApplication {
 
     private static RabbitMQSender rabbitMQSender;
@@ -27,12 +21,19 @@ public class CodeSpellLauncherApplication {
         CodeSpellLauncherApplication.rabbitMQReceiver = rabbitMQReceiver;
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
 
         SpringApplication.run(CodeSpellLauncherApplication.class, args);
 
-        System.out.println("Central Repository Status: " + CodeExecutorHandler.initialCheck());
+        if (checkCentralRepository())
+            log.info("Central Repository Ready!");
+        else
+            log.warn("Central Repository not found.");
 
+    }
+
+    private static boolean checkCentralRepository() {
+        return CodeExecutorHandler.initialCheck();
     }
 
 }
