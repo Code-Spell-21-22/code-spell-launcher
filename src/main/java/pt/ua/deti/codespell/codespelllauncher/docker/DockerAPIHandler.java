@@ -112,4 +112,8 @@ public class DockerAPIHandler {
 
     }
 
+    public void removeContainer(String containerId) {
+        dockerClient.removeContainerCmd(containerId).exec();
+    }
+
 }

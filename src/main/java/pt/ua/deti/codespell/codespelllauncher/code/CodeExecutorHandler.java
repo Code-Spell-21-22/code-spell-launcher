@@ -1,10 +1,8 @@
 package pt.ua.deti.codespell.codespelllauncher.code;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FileUtils;
-import pt.ua.deti.codespell.codespelllauncher.analyser.CodeAnalysisResult;
 import pt.ua.deti.codespell.codespelllauncher.model.CodeExecutionInstance;
 
 import java.io.File;
@@ -86,18 +84,8 @@ public class CodeExecutorHandler {
 
     }
 
-    public CodeAnalysisResult getCodeAnalysisResult() throws IOException {
-        File analysisOutputFile = getAnalysisOutputFile();
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(analysisOutputFile, CodeAnalysisResult.class);
-    }
-
     private File getCentralRepository() {
         return new File(FileUtils.getUserDirectoryPath() + File.separator + "Code_Spell" + File.separator + "Launcher" + File.separator + "CentralRepository");
-    }
-
-    private File getAnalysisOutputFile() {
-        return new File(FileUtils.getUserDirectoryPath() + File.separator + "Code_Spell" + File.separator + "Launcher" + File.separator + "Output" + File.separator + codeExecutionInstance.getCodeUniqueId().toString() + File.separator + "analysis.txt");
     }
 
 }

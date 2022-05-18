@@ -16,12 +16,20 @@ import org.springframework.stereotype.Component;
 public class RabbitMQHandler {
 
     private final String topicExchangeName = "code-spell-launcher-exchange";
-    private final String queueName = "code-spell-launcher-main-queue";
+
+    private final String codeReceiverQueue = "code-spell-launcher-receiver-queue";
+    private final String codeResultsQueue = "code-spell-launcher-results-queue";
+
     private final String routingKey = "code_spell.launcher.#";
 
     @Bean
-    Queue queue() {
-        return new Queue(queueName, false);
+    Queue receiverQueue() {
+        return new Queue(codeReceiverQueue, false);
+    }
+
+    @Bean
+    Queue resultsQueue() {
+        return new Queue(codeResultsQueue, false);
     }
 
     @Bean
@@ -30,15 +38,20 @@ public class RabbitMQHandler {
     }
 
     @Bean
-    Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue).to(exchange).with(routingKey);
+    Binding bindingReceiverQueue(Queue receiverQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(receiverQueue).to(exchange).with(getRoutingKeyWithTopic("receiver"));
+    }
+
+    @Bean
+    Binding bindingResultsQueue(Queue resultsQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(resultsQueue).to(exchange).with(getRoutingKeyWithTopic("results"));
     }
 
     @Bean
     SimpleMessageListenerContainer container(ConnectionFactory connectionFactory, MessageListenerAdapter listenerAdapter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.setQueueNames(queueName);
+        container.setQueueNames(codeReceiverQueue);
         container.setMessageListener(listenerAdapter);
         return container;
     }
@@ -48,8 +61,8 @@ public class RabbitMQHandler {
         return new MessageListenerAdapter(receiver, "receiveMessage");
     }
 
-    String getRoutingKeyWithTopic(String routingKeyTopic) {
-        return routingKey.replace("#", routingKeyTopic);
+    public String getRoutingKeyWithTopic(String topic) {
+        return routingKey.replace("#", topic);
     }
 
 }

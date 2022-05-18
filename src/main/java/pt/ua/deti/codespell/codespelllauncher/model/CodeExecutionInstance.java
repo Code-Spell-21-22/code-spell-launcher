@@ -14,4 +14,13 @@ public class CodeExecutionInstance {
     private int level;
     private String code;
 
+    @Override
+    public String toString() {
+        return "CodeExecutionInstance {" +
+                "codeUniqueId=" + codeUniqueId +
+                ", chapter=" + chapter +
+                ", level=" + level +
+                '}';
+    }
+
 }

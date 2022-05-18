@@ -1,38 +1,38 @@
 package pt.ua.deti.codespell.codespelllauncher.containers;
 
 import org.springframework.stereotype.Component;
+import pt.ua.deti.codespell.codespelllauncher.model.CodeExecutionInstance;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 @Component
 public class ContainerRegistry {
 
-    private final Map<UUID, String> launchedContainers;
+    private final Map<CodeExecutionInstance, String> launchedContainers;
 
     public ContainerRegistry() {
         this.launchedContainers = new HashMap<>();
     }
 
-    public void register(UUID codeUniqueId, String containerId) {
-        launchedContainers.put(codeUniqueId, containerId);
+    public void register(CodeExecutionInstance codeExecutionInstance, String containerId) {
+        launchedContainers.put(codeExecutionInstance, containerId);
     }
 
-    public void unregister(UUID codeUniqueId) {
-        launchedContainers.remove(codeUniqueId);
+    public void unregister(CodeExecutionInstance codeExecutionInstance) {
+        launchedContainers.remove(codeExecutionInstance);
     }
 
-    public boolean isRegistered(UUID codeUniqueId) {
-        return launchedContainers.containsKey(codeUniqueId);
+    public boolean isRegistered(CodeExecutionInstance codeExecutionInstance) {
+        return launchedContainers.containsKey(codeExecutionInstance);
     }
 
-    public String getRegistry(UUID codeUniqueId) {
-        return launchedContainers.get(codeUniqueId);
+    public String getRegistry(CodeExecutionInstance codeExecutionInstance) {
+        return launchedContainers.get(codeExecutionInstance);
     }
 
-    public Set<UUID> getAllRegisters() {
+    public Set<CodeExecutionInstance> getAllRegisters() {
         return launchedContainers.keySet();
     }
 
