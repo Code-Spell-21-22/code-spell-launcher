@@ -16,11 +16,7 @@ public class CodeExecutionInstance {
 
     @Override
     public String toString() {
-        return "CodeExecutionInstance {" +
-                "codeUniqueId=" + codeUniqueId +
-                ", chapter=" + chapter +
-                ", level=" + level +
-                '}';
+        return "CodeExecutionInstance (" + codeUniqueId + ")";
     }
 
 }

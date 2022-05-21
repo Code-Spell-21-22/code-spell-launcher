@@ -1,18 +1,17 @@
 package pt.ua.deti.codespell.codespelllauncher.runnable;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import pt.ua.deti.codespell.codespelllauncher.code.results.pojo.CodeAnalysisResult;
-import pt.ua.deti.codespell.codespelllauncher.code.results.AnalysisCodeResult;
+import pt.ua.deti.codespell.codespelllauncher.code.results.entities.CodeAnalysisOutputEntity;
+import pt.ua.deti.codespell.codespelllauncher.code.results.entities.CodeExecutionResultEntity;
+import pt.ua.deti.codespell.codespelllauncher.code.results.output.CodeAnalysisOutput;
+import pt.ua.deti.codespell.codespelllauncher.code.results.output.CodeExecutionResultOutput;
+import pt.ua.deti.codespell.codespelllauncher.code.results.status.CodeExecutionStatus;
 import pt.ua.deti.codespell.codespelllauncher.containers.ContainerLauncherManager;
 import pt.ua.deti.codespell.codespelllauncher.containers.ContainerRegistry;
 import pt.ua.deti.codespell.codespelllauncher.model.CodeExecutionInstance;
 import pt.ua.deti.codespell.codespelllauncher.rabbitmq.RabbitMQSender;
-import pt.ua.deti.codespell.codespelllauncher.response.CodeLauncherResponse;
-
-import java.io.IOException;
 
 @Component
 @Log4j2
@@ -32,59 +31,60 @@ public class ContainerStatusRunnable implements Runnable {
     @Override
     public void run() {
 
-        for (CodeExecutionInstance codeExecutionInstance : containerRegistry.getAllRegisters()) {
+        for (CodeExecutionInstance currentCodeExecutionInstance : containerRegistry.getAllRegisters()) {
 
-            boolean containerExists = containerLauncherManager.containerExists(codeExecutionInstance);
+            CodeAnalysisOutput analysisOutput = new CodeAnalysisOutput(currentCodeExecutionInstance);
+            CodeExecutionResultOutput executionResultOutput = new CodeExecutionResultOutput(currentCodeExecutionInstance);
+
+            boolean containerExists = containerLauncherManager.containerExists(currentCodeExecutionInstance);
 
             if (!containerExists) {
-                containerLauncherManager.removeContainerFromRegistry(codeExecutionInstance);
+                containerLauncherManager.discardLaunchedContainer(currentCodeExecutionInstance);
                 return;
             }
 
-            boolean isExecutorUp = containerLauncherManager.checkExecutorStatus(codeExecutionInstance);
+            boolean isExecutorUp = containerLauncherManager.checkExecutorStatus(currentCodeExecutionInstance);
 
+            // If the executor has finished its activity
             if (!isExecutorUp) {
 
-                AnalysisCodeResult analysisCodeResult = new AnalysisCodeResult(codeExecutionInstance);
+                containerLauncherManager.pullData(currentCodeExecutionInstance, analysisOutput);
 
-                containerLauncherManager.pullData(codeExecutionInstance, analysisCodeResult);
-
-                CodeAnalysisResult codeAnalysisResult;
-
-                try {
-                    codeAnalysisResult = analysisCodeResult.toEntity();
-                } catch (IOException ioException) {
-                    log.warn(String.format("Unable to transform Analysis Result to entity for code %s.", codeExecutionInstance));
-                    ioException.printStackTrace();
-                    return;
-                }
+                CodeAnalysisOutputEntity codeAnalysisResult = analysisOutput.toEntity();
 
                 if (codeAnalysisResult == null) {
-                    log.warn(String.format("Analysis Result entity for code %s is null.", codeExecutionInstance));
+                    log.warn(String.format("Analysis Result entity for code %s is null.", currentCodeExecutionInstance));
                     return;
                 }
 
-                CodeLauncherResponse codeLauncherResponse = codeAnalysisResult.toCodeLauncherResponse();
-                String codeLauncherResponseJson;
+                String codeAnalysisResultJson = codeAnalysisResult.toJsonString();
 
-                try {
-                    codeLauncherResponseJson = codeLauncherResponse.toJson();
-                } catch (JsonProcessingException jsonProcessingException) {
-                    log.warn(String.format("Unable to convert Code Launcher Response entity to JSON for code %s.", codeExecutionInstance));
-                    return;
+                if (codeAnalysisResultJson != null) {
+                    rabbitMQSender.sendMessage("analysis.results", codeAnalysisResultJson);
+                    log.info(String.format("Sent analysis result for code %s.", currentCodeExecutionInstance));
                 }
 
-                rabbitMQSender.sendMessage("results", codeLauncherResponseJson);
-                log.info(String.format("Sent code result for code %s.", codeExecutionInstance));
+                if (codeAnalysisResult.getAnalysisStatus() == CodeExecutionStatus.SUCCESS) {
 
-                try {
-                    containerLauncherManager.cleanContainerTempData(codeExecutionInstance);
-                } catch (IOException ioException) {
-                    log.warn(String.format("Unable to clean temp data for code instance %s.", codeExecutionInstance));
+                    containerLauncherManager.pullData(currentCodeExecutionInstance, executionResultOutput);
+
+                    CodeExecutionResultEntity codeExecutionResultEntity = executionResultOutput.toEntity();
+
+                    if (codeExecutionResultEntity == null) {
+                        log.warn(String.format("Code Execution Result entity for code %s is null.", currentCodeExecutionInstance));
+                        return;
+                    }
+
+                    String codeExecutionResultJson = codeExecutionResultEntity.toJsonString();
+
+                    if (codeExecutionResultJson != null) {
+                        rabbitMQSender.sendMessage("execution.results", codeExecutionResultJson);
+                        log.info(String.format("Sent execution result for code %s.", currentCodeExecutionInstance));
+                    }
+
                 }
 
-                containerLauncherManager.removeContainer(codeExecutionInstance);
-                containerLauncherManager.removeContainerFromRegistry(codeExecutionInstance);
+                containerLauncherManager.discardLaunchedContainer(currentCodeExecutionInstance);
 
             }
 

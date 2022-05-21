@@ -6,7 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import pt.ua.deti.codespell.codespelllauncher.code.results.CodeExecutionResult;
+import pt.ua.deti.codespell.codespelllauncher.code.results.output.CodeExecutionOutput;
 import pt.ua.deti.codespell.codespelllauncher.docker.DockerAPIHandler;
 import pt.ua.deti.codespell.codespelllauncher.model.CodeExecutionInstance;
 
@@ -48,8 +48,6 @@ public class ContainerLauncherManager {
                 "LEVEL_NUMBER=" + codeExecutionInstance.getLevel()
         };
 
-        System.out.println(Arrays.toString(containerEnvVars));
-
         if (containerList.isEmpty()) {
             containerId = dockerAPIHandler.createDockerContainer(containerName, processorImage, containerEnvVars);
         } else {
@@ -73,22 +71,26 @@ public class ContainerLauncherManager {
 
     }
 
-    public void pullData(CodeExecutionInstance codeExecutionInstance, CodeExecutionResult<?> codeExecutionResult) {
+    public void pullData(CodeExecutionInstance codeExecutionInstance, CodeExecutionOutput<?> codeExecutionOutput) {
 
         if (!containerRegistry.isRegistered(codeExecutionInstance))
             return;
 
-        File destinationFile = codeExecutionResult.getDestinationFile();
+        File destinationFile = codeExecutionOutput.getDestinationFile();
 
         String containerId = containerRegistry.getRegistry(codeExecutionInstance);
-        String sourceFilePath = codeExecutionResult.getSourceFile().getAbsolutePath();
+        String sourceFilePath = codeExecutionOutput.getSourceFile().getAbsolutePath();
         String destinationFilePath = destinationFile.getAbsolutePath();
 
         try {
             if (!destinationFile.exists()) {
-                if (!destinationFile.getParentFile().mkdirs() || !destinationFile.createNewFile()) {
+
+                FileUtils.forceMkdir(destinationFile.getParentFile());
+
+                if (!destinationFile.createNewFile()) {
                     log.warn("Unable to create destination file to receive container pulled data.");
                 }
+
             }
         } catch (Exception e) {
             log.warn("Unable to create destination file to receive container pulled data.");
@@ -142,6 +144,24 @@ public class ContainerLauncherManager {
 
         FileUtils.deleteDirectory(tempContainerDirectory);
         FileUtils.deleteDirectory(outputContainerDirectory);
+
+    }
+
+    public boolean discardLaunchedContainer(CodeExecutionInstance codeExecutionInstance) {
+
+        if (!containerRegistry.isRegistered(codeExecutionInstance))
+            return false;
+
+        try {
+            cleanContainerTempData(codeExecutionInstance);
+        } catch (IOException e) {
+            log.warn("Error discarding container for code %s. Unable to clean temp files.");
+        }
+
+        removeContainer(codeExecutionInstance);
+        removeContainerFromRegistry(codeExecutionInstance);
+
+        return true;
 
     }
 
