@@ -2,6 +2,7 @@ package pt.ua.deti.codespell.codespelllauncher.containers;
 
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
+import javassist.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,6 +84,7 @@ public class ContainerLauncherManager {
         String destinationFilePath = destinationFile.getAbsolutePath();
 
         try {
+
             if (!destinationFile.exists()) {
 
                 FileUtils.forceMkdir(destinationFile.getParentFile());
@@ -92,13 +94,13 @@ public class ContainerLauncherManager {
                 }
 
             }
+
         } catch (Exception e) {
             log.warn("Unable to create destination file to receive container pulled data.");
             e.printStackTrace();
         }
 
         dockerAPIHandler.pullFromContainer(containerId, sourceFilePath, destinationFilePath);
-        destinationFile.deleteOnExit();
 
     }
 
@@ -158,8 +160,13 @@ public class ContainerLauncherManager {
             log.warn("Error discarding container for code %s. Unable to clean temp files.");
         }
 
-        removeContainer(codeExecutionInstance);
-        removeContainerFromRegistry(codeExecutionInstance);
+        try {
+            removeContainer(codeExecutionInstance);
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        } finally {
+            removeContainerFromRegistry(codeExecutionInstance);
+        }
 
         return true;
 

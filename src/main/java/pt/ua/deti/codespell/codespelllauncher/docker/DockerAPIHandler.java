@@ -74,16 +74,25 @@ public class DockerAPIHandler {
         return dockerClient.inspectContainerCmd(containerId).exec().getState().getRunning();
     }
 
-    public Boolean pullFromContainer(String containerId, String sourceFilePath, String destinationFilePath) {
+    public void pullFromContainer(String containerId, String sourceFilePath, String destinationFilePath) {
 
-        TarArchiveInputStream archiveInputStream = new TarArchiveInputStream(dockerClient.copyArchiveFromContainerCmd(containerId, sourceFilePath).exec());
+        InputStream archiveInputStream;
+
+        try {
+            archiveInputStream = dockerClient.copyArchiveFromContainerCmd(containerId, sourceFilePath).exec();
+        } catch (com.github.dockerjava.api.exception.NotFoundException notFoundException) {
+            return;
+        }
+
+        dockerClient.copyArchiveFromContainerCmd(containerId, sourceFilePath).exec();
+        TarArchiveInputStream archiveTarInputStream = new TarArchiveInputStream(archiveInputStream);
 
         try {
 
             TarArchiveEntry entry;
             int bufferSize = 8192;
 
-            while ((entry = (TarArchiveEntry) archiveInputStream.getNextEntry()) != null) {
+            while ((entry = (TarArchiveEntry) archiveTarInputStream.getNextEntry()) != null) {
 
                 if (entry.isDirectory()) {
                     new File(destinationFilePath).mkdirs();
@@ -93,7 +102,7 @@ public class DockerAPIHandler {
                     byte[] data = new byte[bufferSize];
                     FileOutputStream fos = new FileOutputStream(destinationFilePath);
                     BufferedOutputStream dest = new BufferedOutputStream(fos,bufferSize);
-                    while ((count = archiveInputStream.read(data, 0, bufferSize)) != -1) {
+                    while ((count = archiveTarInputStream.read(data, 0, bufferSize)) != -1) {
                         dest.write(data, 0, count);
                     }
 
@@ -103,12 +112,9 @@ public class DockerAPIHandler {
 
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
         }
-
-        return true;
 
     }
 

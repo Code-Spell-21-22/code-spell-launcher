@@ -18,11 +18,15 @@ public class CodeAnalysisOutput extends CodeExecutionOutput<CodeAnalysisOutputEn
     @Override
     public CodeAnalysisOutputEntity toEntity() {
 
+        if (!getDestinationFile().exists())
+            return null;
+
         try {
             return new ObjectMapper().readValue(getDestinationFile(), CodeAnalysisOutputEntity.class);
         } catch (IOException e) {
             log.warn(String.format("Error converting code analysis output to entity for code %s.", codeExecutionInstance));
         }
+
         return null;
 
     }

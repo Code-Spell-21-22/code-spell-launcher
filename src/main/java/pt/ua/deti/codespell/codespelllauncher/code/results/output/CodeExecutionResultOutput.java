@@ -18,12 +18,18 @@ public class CodeExecutionResultOutput extends CodeExecutionOutput<CodeExecution
 
     @Override
     public CodeExecutionResultEntity toEntity() {
+
+        if (!getDestinationFile().exists())
+            return null;
+
         try {
             return new ObjectMapper().readValue(getDestinationFile(), CodeExecutionResultEntity.class);
         } catch (IOException e) {
             log.warn(String.format("Error converting code execution output to entity for code %s.", codeExecutionInstance));
         }
+
         return null;
+
     }
 
     @Override
