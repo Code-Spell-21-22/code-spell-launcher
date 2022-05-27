@@ -22,7 +22,7 @@ public class ErrorsOutput extends CodeExecutionOutput<ErrorsOutputEntity> {
 
         List<String> allLines = new ArrayList<>();
 
-        if (getSourceFile().exists()) {
+        if (getDestinationFile().exists()) {
 
             try {
                 allLines = Files.readAllLines(getDestinationFile().toPath());

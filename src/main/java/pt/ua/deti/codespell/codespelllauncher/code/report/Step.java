@@ -9,6 +9,7 @@ public class Step {
 
     private final int id;
     private final boolean successful;
+    private final List<String> tips;
     private final List<Object> args;
 
 }
