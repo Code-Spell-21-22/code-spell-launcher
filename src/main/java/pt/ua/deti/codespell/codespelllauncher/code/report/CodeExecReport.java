@@ -1,7 +1,6 @@
 package pt.ua.deti.codespell.codespelllauncher.code.report;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import pt.ua.deti.codespell.codespelllauncher.code.results.status.AnalysisStatus;
@@ -17,9 +16,11 @@ public class CodeExecReport {
     private String id;
     private AnalysisStatus analysisStatus;
     private ExecutionStatus executionStatus;
-    private List<Step> steps;
     private int score;
+    private List<Step> steps;
+    private List<String> tips;
     private List<String> output;
     private List<String> errors;
+    private List<String> runtimeLogs;
 
 }

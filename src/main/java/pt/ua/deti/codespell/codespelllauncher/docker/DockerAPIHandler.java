@@ -6,7 +6,7 @@ import com.github.dockerjava.api.model.*;
 import com.github.dockerjava.core.DockerClientBuilder;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -16,7 +16,20 @@ import java.util.stream.Collectors;
 @Component
 public class DockerAPIHandler {
 
-    private final DockerClient dockerClient = DockerClientBuilder.getInstance().build();
+    private final DockerClient dockerClient;
+
+    @Value("${docker.engine.remote}")
+    private boolean useRemoteEngine;
+
+    @Value("${docker.engine.address}")
+    private String remoteEngineAddress;
+
+    public DockerAPIHandler() {
+        if (useRemoteEngine)
+            this.dockerClient = DockerClientBuilder.getInstance(remoteEngineAddress).build();
+        else
+            this.dockerClient = DockerClientBuilder.getInstance().build();
+    }
 
     public List<Container> getListOfContainers() {
         return dockerClient.listContainersCmd().withShowAll(true).exec();
