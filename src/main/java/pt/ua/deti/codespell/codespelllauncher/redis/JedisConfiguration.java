@@ -1,5 +1,6 @@
 package pt.ua.deti.codespell.codespelllauncher.redis;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -11,10 +12,23 @@ import org.springframework.data.redis.repository.configuration.EnableRedisReposi
 @EnableRedisRepositories
 public class JedisConfiguration {
 
+    @Value("${spring.redis.host}")
+    private String redisAddress;
+
+    @Value("${spring.redis.password}")
+    private String redisPassword;
+
+    @Value("${spring.redis.port}")
+    private int redisPort;
+
     @Bean
     JedisConnectionFactory jedisConnectionFactory() {
-        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration("localhost", 6379);
+
+        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(redisAddress, redisPort);
+        redisStandaloneConfiguration.setPassword(redisPassword);
+
         return new JedisConnectionFactory(redisStandaloneConfiguration);
+
     }
 
     @Bean
