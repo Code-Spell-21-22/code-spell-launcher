@@ -2,7 +2,6 @@ package pt.ua.deti.codespell.codespelllauncher.containers;
 
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
-import javassist.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -154,13 +153,11 @@ public class ContainerLauncherManager {
         if (!containerRegistry.isRegistered(codeExecutionInstance))
             return false;
 
-        /*
         try {
             cleanContainerTempData(codeExecutionInstance);
         } catch (IOException e) {
             log.warn("Error discarding container for code %s. Unable to clean temp files.");
         }
-        */
 
         try {
             removeContainer(codeExecutionInstance);
