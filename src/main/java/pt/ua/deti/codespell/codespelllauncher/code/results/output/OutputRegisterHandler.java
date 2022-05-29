@@ -47,10 +47,10 @@ public class OutputRegisterHandler {
         for (CodeResultEntity outputEntity : getOutputEntities()) {
 
             if (outputEntity instanceof CodeExecutionResultEntity) {
-                codeExecReport.setId(((CodeExecutionResultEntity) outputEntity).getCodeUniqueId().toString());
                 codeExecReport.setExecutionStatus(((CodeExecutionResultEntity) outputEntity).getExecutionStatus());
                 codeExecReport.setScore(((CodeExecutionResultEntity) outputEntity).getScore());
             } else if (outputEntity instanceof CodeAnalysisOutputEntity) {
+                codeExecReport.setId(((CodeAnalysisOutputEntity) outputEntity).getCodeUniqueId().toString());
                 codeExecReport.setAnalysisStatus(((CodeAnalysisOutputEntity) outputEntity).getAnalysisStatus());
             } else if (outputEntity instanceof ErrorsOutputEntity) {
                 codeExecReport.setErrors(((ErrorsOutputEntity) outputEntity).getErrors());
