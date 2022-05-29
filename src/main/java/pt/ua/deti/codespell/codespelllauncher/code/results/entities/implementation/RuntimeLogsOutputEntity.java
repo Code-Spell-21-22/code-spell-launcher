@@ -1,18 +1,19 @@
-package pt.ua.deti.codespell.codespelllauncher.code.results.entities;
+package pt.ua.deti.codespell.codespelllauncher.code.results.entities.implementation;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import pt.ua.deti.codespell.codespelllauncher.code.results.entities.CodeResultEntity;
 import pt.ua.deti.codespell.codespelllauncher.response.CodeLauncherResponse;
 
 import java.util.List;
 
 @Getter
-@NoArgsConstructor
 @AllArgsConstructor
-public class ExecutionOutputEntity extends CodeResultEntity {
+@NoArgsConstructor
+public class RuntimeLogsOutputEntity extends CodeResultEntity {
 
-    private List<String> output;
+    private List<String> runtimeLogs;
 
     @Override
     public CodeLauncherResponse toCodeLauncherResponse() {

@@ -1,9 +1,9 @@
-package pt.ua.deti.codespell.codespelllauncher.code.results.output;
+package pt.ua.deti.codespell.codespelllauncher.code.results.output.implementation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
-import pt.ua.deti.codespell.codespelllauncher.code.results.entities.CodeAnalysisOutputEntity;
-import pt.ua.deti.codespell.codespelllauncher.code.results.entities.CodeExecutionResultEntity;
+import pt.ua.deti.codespell.codespelllauncher.code.results.entities.implementation.CodeExecutionResultEntity;
+import pt.ua.deti.codespell.codespelllauncher.code.results.output.CodeExecutionOutput;
 import pt.ua.deti.codespell.codespelllauncher.model.CodeExecutionInstance;
 
 import java.io.File;

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import pt.ua.deti.codespell.codespelllauncher.code.report.CodeExecReport;
 import pt.ua.deti.codespell.codespelllauncher.code.results.output.*;
+import pt.ua.deti.codespell.codespelllauncher.code.results.output.implementation.*;
 import pt.ua.deti.codespell.codespelllauncher.containers.ContainerLauncherManager;
 import pt.ua.deti.codespell.codespelllauncher.containers.ContainerRegistry;
 import pt.ua.deti.codespell.codespelllauncher.model.CodeExecutionInstance;
@@ -45,6 +46,8 @@ public class ContainerStatusRunnable implements Runnable {
             outputRegisterHandler.registerOutput(new CodeExecutionResultOutput(currentCodeExecutionInstance));
             outputRegisterHandler.registerOutput(new ErrorsOutput(currentCodeExecutionInstance));
             outputRegisterHandler.registerOutput(new ExecutionOutput(currentCodeExecutionInstance));
+            outputRegisterHandler.registerOutput(new RuntimeLogsOutput(currentCodeExecutionInstance));
+            outputRegisterHandler.registerOutput(new StepsOutput(currentCodeExecutionInstance));
 
             outputRegisterHandler.pullOutputFiles();
 
