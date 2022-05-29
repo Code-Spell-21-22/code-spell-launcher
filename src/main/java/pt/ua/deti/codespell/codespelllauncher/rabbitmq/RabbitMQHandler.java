@@ -18,8 +18,7 @@ public class RabbitMQHandler {
     private final String topicExchangeName = "code-spell-launcher-exchange";
 
     private final String codeReceiverQueue = "code-spell-launcher-receiver-queue";
-    private final String codeExecutionResultsQueue = "code-spell-launcher-execution-results-queue";
-    private final String codeAnalysisResultsQueue = "code-spell-launcher-analysis-results-queue";
+    private final String codeReportsQueue = "code-spell-code-exec-reports";
 
     private final String routingKey = "code_spell.launcher.#";
 
@@ -29,13 +28,8 @@ public class RabbitMQHandler {
     }
 
     @Bean
-    Queue executionResultsQueue() {
-        return new Queue(codeExecutionResultsQueue, false);
-    }
-
-    @Bean
-    Queue analysisResultsQueue() {
-        return new Queue(codeAnalysisResultsQueue, false);
+    Queue execReportsQueue() {
+        return new Queue(codeReportsQueue, false);
     }
 
     @Bean
@@ -49,13 +43,8 @@ public class RabbitMQHandler {
     }
 
     @Bean
-    Binding bindingExecutionResultsQueue(Queue executionResultsQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(executionResultsQueue).to(exchange).with(getRoutingKeyWithTopic("execution.#"));
-    }
-
-    @Bean
-    Binding bindingAnalysisResultsQueue(Queue analysisResultsQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(analysisResultsQueue).to(exchange).with(getRoutingKeyWithTopic("analysis.#"));
+    Binding bindingExecReportsQueue(Queue execReportsQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(execReportsQueue).to(exchange).with(getRoutingKeyWithTopic("reports"));
     }
 
     @Bean

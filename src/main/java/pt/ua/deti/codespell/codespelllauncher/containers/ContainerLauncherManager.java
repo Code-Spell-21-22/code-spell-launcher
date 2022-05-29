@@ -154,11 +154,13 @@ public class ContainerLauncherManager {
         if (!containerRegistry.isRegistered(codeExecutionInstance))
             return false;
 
+        /*
         try {
             cleanContainerTempData(codeExecutionInstance);
         } catch (IOException e) {
             log.warn("Error discarding container for code %s. Unable to clean temp files.");
         }
+        */
 
         try {
             removeContainer(codeExecutionInstance);

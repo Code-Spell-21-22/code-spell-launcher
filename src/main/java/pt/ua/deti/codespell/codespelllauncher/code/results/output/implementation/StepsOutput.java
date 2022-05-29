@@ -26,7 +26,6 @@ public class StepsOutput extends CodeExecutionOutput<StepsOutputEntity> {
             return new ObjectMapper().readValue(getDestinationFile(), StepsOutputEntity.class);
         } catch (IOException e) {
             log.warn(String.format("Error converting code execution output to entity for code %s.", codeExecutionInstance));
-            e.printStackTrace();
         }
 
         return null;

@@ -13,7 +13,6 @@ public class CodeLauncherResponse {
 
     private final UUID codeUniqueId;
     private final CodeExecutionStatus codeExecutionStatus;
-    private final List<Object> observations;
 
     public String toJson() throws JsonProcessingException {
         return new ObjectMapper().writeValueAsString(this);

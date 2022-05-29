@@ -4,6 +4,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import pt.ua.deti.codespell.codespelllauncher.code.CodeExecutorHandler;
 import pt.ua.deti.codespell.codespelllauncher.code.results.output.OutputRegisterHandler;
 
@@ -24,6 +26,11 @@ public class CodeSpellLauncherApplication {
 
     private static boolean checkCentralRepository() {
         return CodeExecutorHandler.initialCheck();
+    }
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
     }
 
 }

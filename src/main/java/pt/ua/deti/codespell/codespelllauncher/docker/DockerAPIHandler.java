@@ -18,13 +18,7 @@ public class DockerAPIHandler {
 
     private final DockerClient dockerClient;
 
-    @Value("${docker.engine.remote}")
-    private boolean useRemoteEngine;
-
-    @Value("${docker.engine.address}")
-    private String remoteEngineAddress;
-
-    public DockerAPIHandler() {
+    public DockerAPIHandler(@Value("${docker.engine.remote}") boolean useRemoteEngine, @Value("${docker.engine.address}") String remoteEngineAddress) {
         if (useRemoteEngine)
             this.dockerClient = DockerClientBuilder.getInstance(remoteEngineAddress).build();
         else
