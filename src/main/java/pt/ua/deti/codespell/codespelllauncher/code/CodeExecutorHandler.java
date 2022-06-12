@@ -9,8 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 
 @Getter
 @Log4j2
@@ -52,9 +52,13 @@ public class CodeExecutorHandler {
 
         if (!newDirectory.exists()) return false;
 
-        File mainClassFile = new File(newDirectory.getAbsolutePath() + String.format("/code-spell-code-executor/src/main/java/pt/ua/deti/codespell/chapters/chapter_%d/Level_%d.java", chapter, level));
+        Path chaptersDirectory = Paths.get(newDirectory.getAbsolutePath() + "/code-spell-code-executor/src/main/java/pt/ua/deti/codespell/chapters");
+        File mainClassFile = new File(chaptersDirectory.toFile().getAbsolutePath() + String.format("/chapter_%d/Level_%d.java", chapter, level));
 
-        if (!mainClassFile.exists() || !mainClassFile.isFile()) return false;
+        if (!mainClassFile.exists() || !mainClassFile.isFile()) {
+            log.warn("Target class does not exist or is not a file.");
+            return false;
+        }
 
         Path path = mainClassFile.toPath();
         Charset charset = StandardCharsets.UTF_8;
@@ -75,7 +79,33 @@ public class CodeExecutorHandler {
         content = content.replaceAll("// INJECT CODE HERE", codeExecutionInstance.getCode());
 
         try {
+
             Files.write(path, content.getBytes(charset));
+
+            Files.walkFileTree(chaptersDirectory, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+
+                    if (!file.getFileName().toFile().getName().equals(String.format("Level_%d.java", level))) {
+
+                        String fileContent = Files.readString(file, charset);
+
+                        if (fileContent.contains("HelloWorldApp.main")) {
+                            fileContent = fileContent.replaceAll("HelloWorldApp.main\\(new String\\[] \\{}\\);", "");
+                        } else if (fileContent.contains("MyClass.main")) {
+                            fileContent = fileContent.replaceAll("MyClass.main\\(new String\\[] \\{}\\);", "");
+                        }
+
+                        Files.write(file, fileContent.getBytes(charset));
+
+                    }
+
+                    return FileVisitResult.CONTINUE;
+
+                }
+
+            });
+
         } catch (IOException e) {
             e.printStackTrace();
         }
